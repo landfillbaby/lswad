@@ -13,6 +13,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "wad.h"
+#ifdef PRINT_CRC32
+#include <zlib.h>
+#ifndef CRCBUFSIZE
+#define CRCBUFSIZE 65536
+#endif
+#endif
 
 int main(int argc, char **argv) {
 	FILE *wad;
@@ -85,7 +91,14 @@ int main(int argc, char **argv) {
 	}
 #	undef WADDIRSIZE
 
-	if(print_header) printf("    name\t    size\t   index\n");
+	if(print_header) printf("    name\t    size"
+#ifdef PRINT_CRC32
+					"\t   CRC32"
+#endif
+#ifndef NO_PRINT_INDEX
+					"\t   index"
+#endif
+					"\n");
 	for(current = waddir; current < waddir+header.num; ++current) {
 		uchar dbuf[16];
 
@@ -96,7 +109,52 @@ int main(int argc, char **argv) {
 		}
 
 		wad_dir_init(current,dbuf);
-		printf("%8s\t%8lu\t%8lu\n", current->name,current->size,current->index);
+#ifdef PRINT_CRC32
+		unsigned crc = 0;
+		if(current->size) {
+			uchar lbuf[CRCBUFSIZE];
+			unsigned long bytesleft = current->size;
+			long prevseek = ftell(wad);
+			if(0 != fseek(wad,current->index,SEEK_SET)) {
+				fprintf(stderr, "cannot seek to %lu: %s\n",
+						current->index, strerror(errno));
+				return 1;
+			}
+			while(bytesleft >= CRCBUFSIZE) {
+				if(1 != fread(lbuf,CRCBUFSIZE,1,wad)) {
+					fprintf(stderr, "cannot read lump '%s': %s\n",
+							current->name, strerror(errno));
+					return 1;
+				}
+				crc = crc32(crc, lbuf, CRCBUFSIZE);
+				bytesleft -= CRCBUFSIZE;
+			}
+			if(bytesleft) {
+				if(1 != fread(lbuf,bytesleft,1,wad)) {
+					fprintf(stderr, "cannot read lump '%s': %s\n",
+							current->name, strerror(errno));
+					return 1;
+				}
+				crc = crc32(crc, lbuf, bytesleft);
+			}
+			fseek(wad,prevseek,SEEK_SET);
+		}
+#endif
+		printf("%8s\t%8lu"
+#ifdef PRINT_CRC32
+				"\t%08x"
+#endif
+#ifndef NO_PRINT_INDEX
+				"\t%8lu"
+#endif
+				"\n", current->name,current->size
+#ifdef PRINT_CRC32
+				, crc
+#endif
+#ifndef NO_PRINT_INDEX
+				, current->index
+#endif
+				);
 	}
 	fclose(wad);
 
