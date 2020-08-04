@@ -7,14 +7,12 @@
  * or COPYING from the same place you got this file
  */
 
+#include "wad.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <limits.h>  /* INT_M{AX,IN} */
 #include <string.h>
 #include <ctype.h>   /* isprint */
-
-typedef unsigned char uchar;
 
 unsigned long fetchint(uchar *p) {
     return (unsigned long)p[0]
@@ -23,23 +21,11 @@ unsigned long fetchint(uchar *p) {
         |  (unsigned long)p[3]<<24; 
 }
 
-struct wad_header {
-        char type;
-        unsigned long num; /* number of lumps */
-        unsigned long dir; /* offset to dir */
-};
-
 void wad_header_init(struct wad_header * h, uchar *lump) {
         h->type = lump[0];
 	h->num  = fetchint(lump+4);
 	h->dir  = fetchint(lump+8);
 }
-
-struct wad_dir_entry {
-	unsigned long index;
-	unsigned long size;
-	uchar name[9];
-};
 
 void wad_dir_init(struct wad_dir_entry * w, uchar * lump) {
 	uchar c;

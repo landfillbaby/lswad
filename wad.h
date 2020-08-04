@@ -7,13 +7,6 @@
  * or COPYING from the same place you got this file
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <ctype.h>   /* isprint */
-#include <limits.h>  /* INT_M{AX,IN} */
-
 typedef unsigned char uchar;
 unsigned long fetchint(uchar *p);
 

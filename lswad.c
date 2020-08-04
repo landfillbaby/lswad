@@ -9,6 +9,9 @@
 */
 
 #include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 #include "wad.h"
 
 int main(int argc, char **argv) {
@@ -41,42 +44,37 @@ int main(int argc, char **argv) {
 				case 'w': calc_wasted = 0; break;
 				default:
 					fprintf(stderr, "unknown flag '%c'\n",*c);
-					exit(1);
+					return 1;
 			}
 		}
 	}
 
 	if(NULL == (wad = fopen(argv[aoffset],"rb"))) {
 		fprintf(stderr,"cannot open %s: %s\n",argv[aoffset],strerror(errno));
-		exit(EXIT_FAILURE);
+		return 1;
 	}
 	if(1 != fread(hbuf,12,1,wad)) {
 		fprintf(stderr,"couldn't read WAD header from %s\n",argv[aoffset]);
-		exit(EXIT_FAILURE);
+		return 1;
 	}
 	if(0!=strncmp("WAD",(const char *)(hbuf+1),3)) {
 		fprintf(stderr,"%s is not a WAD file.\n",argv[aoffset]);
-		exit(EXIT_FAILURE);
+		return 1;
 	}
 	wad_header_init(&header,hbuf); 
-	switch(header.type) {
-		case 'I':
-		case 'P':
-			if(print_header) printf("%cWAD ",hbuf[0]);
-			break;
-		default:
+	if(header.type != 'I' && header.type != 'P') {
 		fprintf(stderr,"%s is not a WAD file.\n",argv[aoffset]);
-		exit(EXIT_FAILURE);
+		return 1;
 	}
 	if(print_header)
-		printf("containing %lu lumps\n"
+		printf("%cWAD containing %lu lumps\n"
 			"directory at offset %lu (size %lu bytes)\n",
-			header.num,header.dir,16*header.num);
+			hbuf[0],header.num,header.dir,16*header.num);
 
 	if(0 != fseek(wad,header.dir,SEEK_SET)) {
 		fprintf(stderr, "cannot seek to %lu: %s\n",
 				header.dir, strerror(errno));
-		exit(EXIT_FAILURE);
+		return 1;
 	}
 
 #	define WADDIRSIZE (unsigned long)sizeof(struct wad_dir_entry)*header.num
@@ -94,7 +92,7 @@ int main(int argc, char **argv) {
 		if(1 != fread(dbuf,16,1,wad)) {
 			fprintf(stderr, "cannot read directory: %s\n",
 					strerror(errno));
-			exit(EXIT_FAILURE);
+			return 1;
 		}
 
 		wad_dir_init(current,dbuf);
@@ -109,6 +107,4 @@ int main(int argc, char **argv) {
 			printf("%s: %lu wasted byte%s\n",
 				argv[aoffset],wasted,wasted==1?"":"s");
 	}
-
-	exit(EXIT_SUCCESS);
 }
