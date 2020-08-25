@@ -8,25 +8,25 @@
  */
 
 typedef unsigned char uchar;
-unsigned long fetchint(uchar *p);
+unsigned long fetchint(const uchar *p);
 
 struct wad_header {
-        char type;
-        unsigned long num; /* number of lumps */
-        unsigned long dir; /* offset to dir */
+  char type;
+  unsigned long num; /* number of lumps */
+  unsigned long dir; /* offset to dir */
 };
 
-void wad_header_init(struct wad_header * h, uchar *lump);
+void wad_header_init(struct wad_header *h, uchar *lump);
 
 struct wad_dir_entry {
-	unsigned long index;
-	unsigned long size;
-	uchar name[9];
+  unsigned long index;
+  unsigned long size;
+  uchar name[9];
 };
 
-void wad_dir_init(struct wad_dir_entry * w, uchar * lump);
+void wad_dir_init(struct wad_dir_entry *w, uchar *lump);
 
 /* wad_dir_cmp: comparison function for struct wad_dir_entry */
 int wad_dir_cmp(const void *a, const void *b);
 
-unsigned long wad_dir_wasted(struct wad_dir_entry * w, unsigned int s);
+unsigned long wad_dir_wasted(struct wad_dir_entry *w, unsigned int s);
