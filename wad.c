@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-unsigned long fetchint(const uchar *p) {
+static inline unsigned long fetchint(const uchar *p) {
   return (unsigned long)p[0] | (unsigned long)p[1] << 8 |
 	 (unsigned long)p[2] << 16 | (unsigned long)p[3] << 24;
 }

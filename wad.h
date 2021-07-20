@@ -8,7 +8,6 @@
  */
 
 typedef unsigned char uchar;
-unsigned long fetchint(const uchar *p);
 
 struct wad_header {
   char type;
